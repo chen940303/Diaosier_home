@@ -1,0 +1,203 @@
+flask-Email(),,,发送不出去，，，，
+1，在Email(app)要在config后，，因为要传递配置信息，，这个在出现
+2、国内用不了smtp.google.mail,,
+3、在flask web实战一书中
+Message('test subject', sender='you@example.com',
+recipients=['you@example.com']
+
+Message(app.config['FLASKY_MAIL_SUBJECT_PREFIX'] + subject,
+sender=app.config['FLASKY_MAIL_SENDER'], recipients=[to])
+
+参数中，邮箱地址，一个是发的，一个是收的，，，，所用的邮箱地址要开通smtp功能才可以用，，都会设置一个安全密码用来用（因为这里是要在第三方服务器登陆的）
+
+
+TypeError: __init__() got an unexpected keyword argument 'validator'
+
+对应 form中的变量的db.Column(参数，中表单验证函数的参数validators)
+
+1、Flask 把 get_flashed_messages() 函数开放给模板 。
+2、判断条件中的变量 current_user 由 Flask-Login 定义,且在视图函数和模板中自动可用
+这两句话，意思一样吗？
+但是直接使用current_user,  jinja2会报错，，说这个符号没定义
+当然不同，get_flashed_messages()是在Flask的，Flask本身就是和jinja一起设计的，所以是可以的，直接使用一些Flask的标号的，，而current_user是第三方扩展包中，应该就不可以直接使用，但是，本书中
+后来就可以用了，，第一是没有创建数据库，，，没有创建用户验证登陆（一开始跳过了），，不知是不是由于这样，一些步骤跳过了，（所以没有能执行flask-login中对current_user的定义），，出现“undefined ‘current_user’”
+后来发现没有login_manager.init_app(app)                   #是没有初始化login_manager才导致current_user不能用的，，，所以是这个原因
+
+3、    if current_user.is_authenticated() and not current_user.confirmed and request.endpoint[:5]!='auth.' and request.endpoint!='static':
+
+    TypeError: 'bool' object is not callable
+这个书中还是方法来的，，，后面版本就变了属性，，bool类型
+
+Flask-Login 要求程序实现一个回调函数,使用指定的标识符加载用户
+
+
+
+html的</ div>是不正确的，，，</div>中间没有空格才对
+
+
+即便通过配置,程序已经可以在请求末尾自动提交数据库变化,这里也要添加
+db.session.commit() 调用。问题在于,提交数据库之后才能赋予新用户 id 值,而确认令牌需要用到 id ,所以不能延后提交
+
+在修改了model的User后（增加了个认证标志，confirmed）没有更新，，出现了一些问题OperationalError: (sqlite3.OperationalError) no such column: users.confirmed
+
+数据库迁移一般分为两步
+
+    生成迁移的脚本
+    运行脚本，更改数据库
+
+在 upgrade 之前，你需要 migrate
+
+修改了 model 之后
+需要先 python manage.py db migrate
+然后才 python manage.py db upgrade
+
+INFO  [alembic.runtime.migration] Running upgrade  -> 4de78b393c0f, empty message
+/home/ccm/flasky/venv/local/lib/python2.7/site-packages/alembic/util/messaging.py:69: UserWarning: Skipping unsupported ALTER for creation of implicit constraint
+出现一些警告，这又是为什么呢？
+
+
+设计逻辑：
+    @auth.route('/register',methods=['GET','POST'])
+def register():
+    form=RegistrationForm()
+    if form.validate_on_submit():
+        user=User(email=form.email.data, username=form.username.data, password=form.password.data)
+        db.session.add(user)       #添加到数据库
+        db.session.commit()        #先提交，因为这里要先用id
+
+这样注册，，势必造成注册时，，账号有效，而有可能还没认证，，这样就跟我在后台shell添加了一个账号一样，，，由于，有过这样的，过程如下，在这种情况下，所有请求都会，就会在before_request的钩子函数，中先被影响处理，
+
+
+发送邮件时，，def send_async_email(app, msg):
+    with current_app.app_context():   #
+        mail.send(msg）
+这里报错，，注意。由于是开了线程异步，所以报错不在浏览器显示了，在shell中查看
+RuntimeError: working outside of application context
+
+原文在介绍Flask-Email那节也有提醒：
+很多 Flask 扩展都假设已经存在激活的程序上下文和请求
+上下文。Flask-Mail 中的 send() 函数使用 current_app ,因此必须激活程序上下文。不过,
+在不同线程中执行 mail.send() 函数时,程序上下文要使用 app.app_context() 人工创建
+
+查看了开源的相关版本的源代码，，发现自己少了在send_email():中
+app = current_app._get_current_object()   #原来要加这句的
+
+可以了之后，，出现了路由跳转逻辑的错误，，进行了几次测试，，发现注册后包括认证后，都会被重定位到未认证的页面路径，，，我怀疑是那个before_request的钩子函数的处理，，没有对current_user更新，，所以我，在加了打印的，确实是不对应，，那就，，是不是打来验证，跳出了会话，判断current_user.confired会从数据库中读出呢，，也就是说验证完后的confirmed没有提交到数据库（默认设置的是False），，就好像if not confirmed这句判断没起作用，，，而且第二。。。我找到一个解决办法，就是在验证后设置confirmed为True后提交数据库db.session.commit()，就恢复正常了，而且验证时通过@login_required，，还会自动登陆，（说这个是因为，，后面配置正确后出现了不同），也就是说要配置请求结束后数据库变动自动提交，，后来也找到 SQLALCHEMY_ON_REARDOWN = True 可以，，但是发现还是不行，就，，，，后来查看一下配置SQLALCHEMY_COMMIT_ON_TEARDOWN=True写错成了SQLALCHEMY_COMMIT_TEARDOWN=True，，，，配置名不对，，怪不得不起作用，，原来的配置是对的，，，，后来点击认证连接后，是完全按照书上的情况走（自己也没想得很通），，根据书提示，由于@login_required的保护，会先要求登陆，，，误打误撞，，发现了上面的解决办法，，是会自动登陆的，，，是不是因为，用配置的方式让处理数据提交生效，而且会清除current_user的有效信息，，这样通过@login_required，，会转到login，要先登陆才能验证成功，而且加上提示（扩展包提供，默认的），，这样也可以猜想到@login_required大概的流程，，判断current_user,是不是anonymous，，（接着推出，，自动提交，会初始化current_user），而且，，，，，同时，根据前面的错误配置和推敲调试得出的解决方法，还发现，，对于ORM，，对象映射中，没提交的，是不生效的，，即使缓冲中是值已改变，，这是因为ORM特殊，，所以引用是还会有中间机制，，来获得数据库中实际的值的，（就像操作系统中页缓冲中就有“一致性”的标志，决定是否采用），，还获得了现在web常见的设计。。验证前不用再登陆。。
+
+
+在设置角色权限时。。管理员是0x0ff，就是具有所有权限的。。。要在shell中运行insert_roles()来建立角色
+
+有遇到一个报错UnicodeDecodeError: 'ascii' codec can't decode byte 0xe8 in position 0: ordinal not in range(128)
+
+
+
+posts=Post.query.order_by(Post.timestamp.desc()).all()
+
+posts=user.posts.order_by(Post.timestamp.desc()).all()
+两次不同哦
+
+修改了models.py的内容要重启app shell，，不然shell 的错会重报
+
+
+示例 11-21  app/main/views.py:编辑博客文章的路由
+@main.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id):
+post = Post.query.get_or_404(id)
+if current_user != post.author and \
+not current_user.can(Permission.ADMINISTER):
+abort(403)
+form = PostForm()
+if form.validate_on_submit():
+post.body = form.body.data
+db.session.add(post)
+flash('The post has been updated.')
+return redirect(url_for('post', id=post.id))
+form.body.data = post.body
+return render_template('edit_post.html', form=form)
+中的url_for('post',id=post.id)要在post前面加上'.',即url_for('.post',id=post.id)
+
+用了markdown富文本处理，没有预览页面，，，因为忘记了添加相关的javascript脚本，所以没有显示
+
+
+示例 14-8  app/api_1_0/authentication.py:在 before_request 处理程序中进行认证
+from .errors import forbidden_error
+160 | 第 14 章@api.before_request
+@auth.login_required
+def before_request():
+if not g.current_user.is_anonymous and \
+not g.current_user.confirmed:
+return forbidden('Unconfirmed account')
+
+中的import forbidden_error 应改为forbidden
+
+最后测试时报错：
+ Parent instance <User at 0x7fd41f107e90> is not bound to a Session, and no contextual session is established; lazy load operation of attribute 'followed' cannot proceed
+
+示例 12-10  app/models.py:构建用户时把用户设为自己的关注者
+class User(UserMixin, db.Model):
+# ...
+def __init__(self, **kwargs):
+# ...
+self.follow(self)#中文书本是这样的，，，，
+
+源码是这样设置关注自己的self.followed.append(Follow(followed=self))
+我决定试试这个
+
+
+改了成功了，，，还是有之前的一个小问题
+Traceback (most recent call last):
+  File "manage.py", line 45, in <module>
+    manager.run()
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask_script/__init__.py", line 412, in run
+    result = self.handle(sys.argv[0], sys.argv[1:])
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask_script/__init__.py", line 383, in handle
+    res = handle(*args, **config)
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask_script/commands.py", line 216, in __call__
+    return self.run(*args, **kwargs)
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask/ctx.py", line 386, in __exit__
+    self.auto_pop(exc_value)
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask/ctx.py", line 374, in auto_pop
+    self.pop(exc)
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask/ctx.py", line 366, in pop
+    app_ctx.pop(exc)
+  File "/home/ccm/flasky/venv/local/lib/python2.7/site-packages/flask/ctx.py", line 178, in pop
+    % (rv, self)
+AssertionError: Popped wrong app context.  (<flask.ctx.AppContext object at 0x7fdcfafef890> instead of <flask.ctx.AppContext object at 0x7fdcfb637bd0>)
+
+退出时，弹出app上下文很请求上下文出错
+
+测试创建用户时也有报错，，因为数据库不能创建两次一样的，，如果在那列的unique=True的话，，所以会报错。
+
+原文中
+# 写一篇文章
+response = self.client.post(
+url_for('api.new_post'),
+headers=self.get_auth_header('john@example.com', 'cat'),
+data=json.dumps({'body': 'body of the *blog* post'}))
+self.assertTrue(response.status_code == 201)
+url = response.headers.get('Location')
+self.assertIsNotNone(url)
+
+get_auth_header('john@example.com', 'cat')应改为get_api_header
+
+测试web 服务时（rest api测试，，昨天还好的，今天的测试增加了代码覆盖，和客户端测试）就有这样报错return response(environ, start_response)
+TypeError: 'NoneType' object is not callable
+发现是接口对接问题，，我又试了一下昨晚的测试方式，发现同样报错，于是确定是服务器api问题
+http --auth 13560406707@163.com:123 --json POST http://127.0.0.1:5000/api/v.01/posts/ "body=I am adding a post"
+HTTP/1.0 500 INTERNAL SERVER ERROR
+
+后悔没有备份那个版本的，，签出git（重要）
+
+原来是最后添加的，，，写入日志的，，是在请求后的，，（这些地方都是很重要的地方，要小心谨慎）
+#数据库缓慢的查询语句记录下来，写入日志
+#from flask.ext.sqlalchemy import get_debug_queries
+#@main.after_app_request
+#def after_request(response):
+#    for query in get_debug_queries():
+#        if query.duration>=current_app.config["FLASKY_SLOW_DB_QUERY_TIMEOUT"]:
+#            current_app.logger.warning('Slow query:%s\nParameters:%s\nDuration:%f\nContext:%s\n' % 3(query.statement,query.parameters,query.duration,query.context))
+
+最后写漏了return response
+
+单元测试client的时候，web程序的时候，，client.post()无效，，我猜是form表单使用的是wtf，，创建实例和提交，通过加密解密，对应的，，所以书本说到，，要把这个功能配置得False，，就是取消这个处理（加解过程），，应该是这里配置没起作用，导致的
