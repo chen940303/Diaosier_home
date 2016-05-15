@@ -36,6 +36,9 @@ def create_app(config_name):
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint,url_prefix='/auth')#路由前缀
     from api_1_0 import api as api_1_0_blueprint
-    app.register_blueprint(api_1_0_blueprint, url_prefix='/api/v1.0')    
+    app.register_blueprint(api_1_0_blueprint, url_prefix='/api/v1.0')  
+    if not app.debug and not app.testing and not app.config['SLL_DISABLE']:
+        from flask.ext.sslify import SSLify
+        sslify=SSLify(app)  
 
     return app
