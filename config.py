@@ -7,6 +7,9 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN=True
     #SQLALCHEMY_ON_REARDOWN = True这句错了
     FLASKY_MAIL_SUBJECT_PREFIX='[Flasky]'
+    MAIL_SERVER= 'smtp.qq.com'
+    MAIL_PORT=587
+    MAIL_USE_TLS = True
     FLASKY_MAIL_SENDER='447325059@qq.com'
     FLASKY_ADMIN= os.environ.get('FLASKY_ADMIN')
     FLASKY_POSTS_PER_PAGE=20
@@ -14,7 +17,7 @@ class Config:
     FLASKY_COMMENTS_PER_PAGE=20
     SQLALCHEMY_RECORD_QUERIES = True
     FLASKY_SLOW_DB_QUERY_TIMEOUT = 0.5
-    SSL_DISABLE=True    
+    SSL_DISABLE=False    
 
     @staticmethod
     def init_app(app):
