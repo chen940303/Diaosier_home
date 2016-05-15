@@ -1,7 +1,5 @@
 Flasky
 ======
 
-This repository contains the source code examples for my O'Reilly book [Flask Web Development](http://www.flaskbook.com).
-
-The commits and tags in this repository were carefully created to match the sequence in which concepts are presented in the book. Please read the section titled "How to Work with the Example Code" in the book's preface for instructions.
+learn from Flask Web Development transfor chinese, but i found some errors in it ,it's my pratice porject, i think i will review it soon, it include a note which mark down the debug errors but use chinese. of couse i sulove some of them by reading miguelgrinberg's example codes https://github.com/miguelgrinberg/flasky
 
