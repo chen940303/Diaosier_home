@@ -8,6 +8,7 @@ Flask-SQLAlchemy==2.1
 Flask-Script==2.0.5
 Flask-WTF==0.12
 Jinja2==2.8
+Markdown==2.6.6
 Mako==1.0.4
 MarkupSafe==0.23
 SQLAlchemy==1.0.12
