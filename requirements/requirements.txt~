@@ -22,3 +22,4 @@ visitor==0.1.2
 wsgiref==0.1.2
 gunicorn==19.5.0
 psycopg2==2.5.1
+Flask-SSLify==0.1.5
