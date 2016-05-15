@@ -10,6 +10,8 @@ class Config:
     MAIL_SERVER= 'smtp.qq.com'
     MAIL_PORT=587
     MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     FLASKY_MAIL_SENDER='447325059@qq.com'
     FLASKY_ADMIN= os.environ.get('FLASKY_ADMIN')
     FLASKY_POSTS_PER_PAGE=20
@@ -52,7 +54,7 @@ class ProductionConfig(Config):
         if getattr(cls,'MAIL_USE_TLS',None) is not None:
             credentials=(cls.MAIL_USE_TLS,None)
             if getattr(cls, 'MAIL_USE_TLS',None):
-                secure()
+                #secure()
         mali_handler=SMTPHandler(mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT), fromaddr=cls.FLASKY_MAIL_SENDER,toaddrs=[cls.FLASKY_ADMIN],subject=cls.FLASKY_MAIL_SUBJECT_PREFIX + ' Application Error',credentials=credentials,secure=secure)
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
