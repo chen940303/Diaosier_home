@@ -1,0 +1,7 @@
+{% extends 'auth/login.html' %}
+{% if current_user.is_authenticated %}
+<p>{{ curent_user.name }}</p>
+ {% endif %}
+<!--要注册的页面会登陆吗-->
+
+

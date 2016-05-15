@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Flasky-重发验证{% endblock %}
+
+{% block page_content %}
+<div class='page-header'>
+    <h1>重发</ h1>
+</div>
+<p><a href="{{ url_for('auth.resend_confirmation') }}">重新发送</a></p>
+{% endblock %}
